@@ -1,4 +1,4 @@
-name: Cypress CI
+name: Cypress Tests
 
 on:
   push:
@@ -7,29 +7,25 @@ on:
     branches: ["**"]
 
 jobs:
-  # ── Standard Node runner — UI tests ────────────────────────────────────────
+  # ── UI Tests — parallelised across 2 Cypress Cloud containers ──────────────
   ui-tests:
-    name: UI Tests (Node)
+    name: UI Tests (container ${{ matrix.containers }}/2)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false        # keep running other containers if one fails
+      matrix:
+        containers: [1, 2]    # 2 parallel instances split by Cypress Cloud
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run UI tests (with Cypress Cloud recording)
+      - name: Cypress run — UI (parallel)
         uses: cypress-io/github-action@v6
         with:
-          command: npm run test:ui
           browser: chrome
+          spec: cypress/e2e/ui/**/*.cy.js
           record: true
+          parallel: true
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,7 +34,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots-ui
+          name: cypress-screenshots-ui-${{ matrix.containers }}
           path: cypress/screenshots
           if-no-files-found: ignore
 
@@ -46,7 +42,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-videos-ui
+          name: cypress-videos-ui-${{ matrix.containers }}
           path: cypress/videos
           if-no-files-found: ignore
 
@@ -54,32 +50,22 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mochawesome-report-ui
+          name: mochawesome-report-ui-${{ matrix.containers }}
           path: cypress/reports
           if-no-files-found: ignore
 
-  # ── Standard Node runner — API tests ───────────────────────────────────────
+  # ── API Tests ───────────────────────────────────────────────────────────────
   api-tests:
-    name: API Tests (Node)
+    name: API Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run API tests (with Cypress Cloud recording)
+      - name: Cypress run — API
         uses: cypress-io/github-action@v6
         with:
-          command: npm run test:api
-          browser: chrome
+          spec: cypress/e2e/api/**/*.cy.js
           record: true
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
@@ -101,7 +87,7 @@ jobs:
           path: cypress/reports
           if-no-files-found: ignore
 
-  # ── Docker runner (containerised CI) ───────────────────────────────────────
+  # ── Docker — full suite containerised ──────────────────────────────────────
   docker-tests:
     name: All Tests (Docker)
     runs-on: ubuntu-latest
@@ -120,7 +106,7 @@ jobs:
             -v ${{ github.workspace }}/cypress/reports:/app/cypress/reports \
             parabank-cypress npm run test:all
 
-      - name: Upload Docker test artifacts on failure
+      - name: Upload Docker screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:

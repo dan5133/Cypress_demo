@@ -8,7 +8,8 @@
     "cy:run": "cypress run",
     "test:ui": "cypress run --spec 'cypress/e2e/ui/**/*.cy.js'",
     "test:api": "cypress run --spec 'cypress/e2e/api/**/*.cy.js'",
-    "test:all": "cypress run"
+    "test:all": "cypress run",
+    "test:regression": "powershell -ExecutionPolicy Bypass -File run-regression.ps1"
   },
   "keywords": [
     "cypress",

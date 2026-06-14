@@ -4,3 +4,4 @@ cypress/videos/
 cypress/reports/
 cypress.env.json
 .env
+run-regression.ps1
