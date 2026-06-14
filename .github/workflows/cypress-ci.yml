@@ -1,0 +1,137 @@
+name: Cypress CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  # ── Standard Node runner — UI tests ────────────────────────────────────────
+  ui-tests:
+    name: UI Tests (Node)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run UI tests (with Cypress Cloud recording)
+        uses: cypress-io/github-action@v6
+        with:
+          command: npm run test:ui
+          browser: chrome
+          record: true
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots-ui
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Upload videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos-ui
+          path: cypress/videos
+          if-no-files-found: ignore
+
+      - name: Upload Mochawesome report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-report-ui
+          path: cypress/reports
+          if-no-files-found: ignore
+
+  # ── Standard Node runner — API tests ───────────────────────────────────────
+  api-tests:
+    name: API Tests (Node)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run API tests (with Cypress Cloud recording)
+        uses: cypress-io/github-action@v6
+        with:
+          command: npm run test:api
+          browser: chrome
+          record: true
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots-api
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Upload Mochawesome report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-report-api
+          path: cypress/reports
+          if-no-files-found: ignore
+
+  # ── Docker runner (containerised CI) ───────────────────────────────────────
+  docker-tests:
+    name: All Tests (Docker)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t parabank-cypress .
+
+      - name: Run all tests in Docker
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/cypress/screenshots:/app/cypress/screenshots \
+            -v ${{ github.workspace }}/cypress/videos:/app/cypress/videos \
+            -v ${{ github.workspace }}/cypress/reports:/app/cypress/reports \
+            parabank-cypress npm run test:all
+
+      - name: Upload Docker test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-cypress-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Upload Docker videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-cypress-videos
+          path: cypress/videos
+          if-no-files-found: ignore

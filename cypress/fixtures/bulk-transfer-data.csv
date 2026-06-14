@@ -1,0 +1,6 @@
+fromAccount,toAccount,amount,expectedResult
+12345,67890,50,success
+12345,67890,100,success
+12345,67890,250,success
+12345,67890,0,error
+12345,67890,9999999,error

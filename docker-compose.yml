@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  cypress:
+    build: .
+    volumes:
+      - ./cypress/screenshots:/app/cypress/screenshots
+      - ./cypress/videos:/app/cypress/videos
+      - ./cypress/reports:/app/cypress/reports
+    environment:
+      - CYPRESS_validUser=john
+      - CYPRESS_validPassword=demo
+    command: npm run test:all
+
+  cypress-ui:
+    build: .
+    profiles: ["ui"]
+    volumes:
+      - ./cypress/screenshots:/app/cypress/screenshots
+      - ./cypress/videos:/app/cypress/videos
+    environment:
+      - CYPRESS_validUser=john
+      - CYPRESS_validPassword=demo
+    command: npm run test:ui
+
+  cypress-api:
+    build: .
+    profiles: ["api"]
+    volumes:
+      - ./cypress/screenshots:/app/cypress/screenshots
+      - ./cypress/videos:/app/cypress/videos
+    environment:
+      - CYPRESS_validUser=john
+      - CYPRESS_validPassword=demo
+    command: npm run test:api

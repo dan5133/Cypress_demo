@@ -1,0 +1,27 @@
+{
+  "name": "cypress_demo",
+  "version": "1.0.0",
+  "description": "Cypress test suite for ParaBank — UI, API, CSV data-driven, CI/CD, Docker",
+  "main": "index.js",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "test:ui": "cypress run --spec 'cypress/e2e/ui/**/*.cy.js'",
+    "test:api": "cypress run --spec 'cypress/e2e/api/**/*.cy.js'",
+    "test:all": "cypress run"
+  },
+  "keywords": [
+    "cypress",
+    "parabank",
+    "e2e",
+    "api-testing",
+    "data-driven"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cypress": "^13.9.0",
+    "cypress-mochawesome-reporter": "^4.0.2",
+    "papaparse": "^5.5.3"
+  }
+}
